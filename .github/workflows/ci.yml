@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate shipped .wsb profiles with PowerShell
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path '.\configs' -Filter '*.wsb' | ForEach-Object {
+            .\scripts\Test-SandboxConfig.ps1 -Path $_.FullName
+          }
+
+      - name: Validate shipped .wsb profiles with Python schema tests
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python tests/test_configs.py
+
+      - name: PSScriptAnalyzer (errors only)
+        shell: pwsh
+        run: |
+          Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+          Invoke-ScriptAnalyzer -Path '.\scripts' -Severity Error

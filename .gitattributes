@@ -1,0 +1,6 @@
+# Keep line endings stable across Windows checkouts: the original
+# project shipped CRLF in the worktree against LF in git, which showed
+# up as a whole-file diff for no content change.
+* text=auto eol=lf
+*.wsb text eol=lf
+*.ps1 text eol=lf

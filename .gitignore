@@ -1,0 +1,7 @@
+# Generated .wsb files (your own launches, not the shipped profiles)
+sandbox.wsb
+*.generated.wsb
+out/
+
+# Logs
+*.log

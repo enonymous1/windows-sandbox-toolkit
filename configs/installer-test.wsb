@@ -1,0 +1,28 @@
+<Configuration>
+  <!--
+    installer-test.wsb — run an installer that needs the network,
+    without letting it reach your clipboard or host folders.
+
+    Networking is on (many installers download components), but
+    clipboard redirection is off and no folder is mapped, so the
+    installer cannot silently copy things in or out. If the
+    installer needs a local .msi/.exe, generate a copy with a
+    read-only mapped folder instead of editing this file:
+
+      .\scripts\New-SandboxConfig.ps1 -Profile InstallerTest `
+        -HostFolder 'C:\Users\Public\Downloads\installers' `
+        -OutputPath '.\installer-test-mapped.wsb' -Launch
+
+    The mapped host folder must already exist, or the sandbox
+    fails to start. Remember: a writable mapped folder keeps its
+    changes after the sandbox closes. Everything else is discarded.
+  -->
+  <vGPU>Enable</vGPU>
+  <Networking>Enable</Networking>
+  <AudioInput>Disable</AudioInput>
+  <VideoInput>Disable</VideoInput>
+  <ProtectedClient>Disable</ProtectedClient>
+  <PrinterRedirection>Disable</PrinterRedirection>
+  <ClipboardRedirection>Disable</ClipboardRedirection>
+  <MemoryInMB>4096</MemoryInMB>
+</Configuration>

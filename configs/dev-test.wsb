@@ -1,0 +1,29 @@
+<Configuration>
+  <!--
+    dev-test.wsb — try out your own build or installer, with network.
+
+    Use this only for software you wrote or already trust. Networking
+    and clipboard are on, so it is NOT a safe profile for untrusted
+    downloads — use untrusted.wsb for those.
+
+    Nothing you do inside the sandbox survives closing it, except
+    changes to a writable mapped folder — and this profile maps none.
+    To map your build output in, generate a copy:
+
+      .\scripts\New-SandboxConfig.ps1 -Profile DevTest `
+        -HostFolder 'C:\dev\myapp\bin' `
+        -OutputPath '.\dev-test-mapped.wsb' -Launch
+
+    The mapped host folder must already exist, or the sandbox
+    fails to start. Map it read-only unless the installer inside
+    the sandbox genuinely needs to write back to the host.
+  -->
+  <vGPU>Enable</vGPU>
+  <Networking>Enable</Networking>
+  <AudioInput>Disable</AudioInput>
+  <VideoInput>Disable</VideoInput>
+  <ProtectedClient>Disable</ProtectedClient>
+  <PrinterRedirection>Disable</PrinterRedirection>
+  <ClipboardRedirection>Enable</ClipboardRedirection>
+  <MemoryInMB>4096</MemoryInMB>
+</Configuration>
