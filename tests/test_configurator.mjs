@@ -24,6 +24,8 @@ const repoRoot = dirname(here);
 const schema = JSON.parse(readFileSync(join(repoRoot, 'schema', 'wsb-schema.json'), 'utf8'));
 const app = require(join(repoRoot, 'site', 'app.js'));
 const appSource = readFileSync(join(repoRoot, 'site', 'app.js'), 'utf8');
+const siteHtml = readFileSync(join(repoRoot, 'site', 'index.html'), 'utf8');
+const siteCss = readFileSync(join(repoRoot, 'site', 'style.css'), 'utf8');
 
 let passed = 0;
 let failed = 0;
@@ -52,6 +54,19 @@ check('app.js reads schema.optionValues and schema.elementOrder',
   appSource.includes('schema.optionValues') && appSource.includes('schema.elementOrder'));
 check('app.js has no hardcoded profile values block',
   !appSource.includes('Untrusted":{"AudioInput"') && !appSource.includes('"DevTest":{"AudioInput"'));
+
+// Theme: system theme must work without JS (CSS media query),
+// a manual choice must be able to override it (data-theme
+// rules after the media query), and the control must exist.
+check('site is theme-aware without JS (prefers-color-scheme)',
+  siteCss.includes('@media (prefers-color-scheme: dark)'));
+check('site manual theme overrides system theme (data-theme after media query)',
+  siteCss.includes('html[data-theme="dark"]')
+  && siteCss.indexOf('html[data-theme="dark"]') > siteCss.indexOf('@media (prefers-color-scheme: dark)'));
+check('site theme control exists and is remembered',
+  siteHtml.includes('id="theme"')
+  && appSource.includes("localStorage.getItem('wsb-theme')")
+  && appSource.includes("setAttribute('data-theme'"));
 
 // 2. Untrusted defaults, no folder.
 {

@@ -3,11 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Windows Sandbox configurator — windows-sandbox-toolkit</title>
 <link rel="stylesheet" href="style.css">
+<script>
+  // Apply a remembered manual theme before the stylesheet paints,
+  // so there is no light-to-dark flash. "auto" (or no stored
+  // value) leaves data-theme unset and the CSS media query
+  // follows the system theme instead.
+  try {
+    var storedTheme = localStorage.getItem('wsb-theme');
+    if (storedTheme === 'light' || storedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', storedTheme);
+    }
+  } catch (e) { /* localStorage unavailable: system theme applies. */ }
+</script>
 </head>
 <body>
 <main>
+<div class="theme">
+  <label for="theme">Theme</label>
+  <select id="theme">
+    <option value="auto">Auto (system)</option>
+    <option value="light">Light</option>
+    <option value="dark">Dark</option>
+  </select>
+</div>
 <h1>Windows Sandbox configurator</h1>
 <p>
   Pick a profile, tweak the settings, and download a real

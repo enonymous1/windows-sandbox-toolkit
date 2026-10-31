@@ -178,6 +178,41 @@ if (typeof document !== 'undefined') {
     ClipboardRedirection: 'Allow text and files to be pasted between host and sandbox.'
   };
 
+  // Theme: Auto follows the system (CSS media query, so it works
+  // even without JS). A manual Light/Dark choice sets data-theme
+  // on <html>, overriding the media query, and is remembered in
+  // localStorage under 'wsb-theme'. This runs independently of
+  // the schema load, so the theme control works even if the
+  // schema fails to load.
+  var themeSelect = document.getElementById('theme');
+  function applyTheme() {
+    var stored = null;
+    try { stored = localStorage.getItem('wsb-theme'); } catch (e) { stored = null; }
+    if (stored === 'light' || stored === 'dark') {
+      document.documentElement.setAttribute('data-theme', stored);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    if (themeSelect) { themeSelect.value = stored || 'auto'; }
+  }
+  if (themeSelect) {
+    themeSelect.addEventListener('change', function () {
+      try {
+        if (themeSelect.value === 'auto') { localStorage.removeItem('wsb-theme'); }
+        else { localStorage.setItem('wsb-theme', themeSelect.value); }
+      } catch (e) { /* localStorage unavailable: apply for this visit only. */ }
+      applyTheme();
+    });
+  }
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    var darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    // Re-apply on system-theme change; only matters for Auto,
+    // because a manual choice sets data-theme and wins in CSS.
+    if (darkQuery.addEventListener) { darkQuery.addEventListener('change', applyTheme); }
+    else if (darkQuery.addListener) { darkQuery.addListener(applyTheme); }
+  }
+  applyTheme();
+
   var schema = null;
   var profileSelect = document.getElementById('profile');
   var optionsDiv = document.getElementById('options');

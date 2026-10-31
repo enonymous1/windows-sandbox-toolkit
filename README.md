@@ -123,7 +123,9 @@ The page reads `schema/wsb-schema.json` — the same file the
 PowerShell generator and validator read — so it cannot quietly
 disagree with them about what a valid configuration is, and
 `tests/test_configurator.mjs` checks its output against the
-PowerShell generator's output for the same inputs.
+PowerShell generator's output for the same inputs. The page is
+theme-aware: it follows your system theme, with a Theme control
+(Auto / Light / Dark) to override it.
 
 What it cannot do, by design: launch a sandbox, check your
 Windows edition or virtualization, enable the feature, or check

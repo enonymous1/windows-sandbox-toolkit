@@ -7,6 +7,23 @@ not by this project).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-31
+
+### Added
+
+- Pages configurator is theme-aware: it follows the system
+  theme with no JavaScript (CSS `prefers-color-scheme`), and a
+  Theme control (Auto / Light / Dark, top-right) lets the
+  visitor override it. A manual choice is remembered in
+  `localStorage` under `wsb-theme`, is applied in a small
+  inline script in `<head>` so there is no light-to-dark flash
+  on load, and follows a later system-theme change while set
+  to Auto. All colours go through CSS variables, so no element
+  keeps a hardcoded light colour in dark mode.
+- Configurator tests now check the theme layers: media query
+  present, `data-theme` rules after it (so a manual choice
+  wins), and the control plus its localStorage key present.
+
 ## [1.2.0] - 2026-10-31
 
 ### Added
