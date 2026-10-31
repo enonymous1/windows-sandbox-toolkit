@@ -36,6 +36,15 @@ jobs:
       - name: Validate shipped .wsb profiles with Python schema tests
         run: python tests/test_configs.py
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configurator parity tests (JS output vs PowerShell generator)
+        shell: pwsh
+        run: node tests/test_configurator.mjs
+
       - name: PSScriptAnalyzer (any finding fails)
         shell: pwsh
         run: |

@@ -358,3 +358,35 @@ folder cases still SKIP on Linux), PSScriptAnalyzer 0,
 parser 0. The Windows mapping case itself remains a CI-only
 gate and needs a green run after this fix; the mechanism
 that failed it is now covered on every platform.
+
+## Addendum — v1.2.0: Pages configurator (2026-10-31)
+
+A static page, not a second generator. `site/app.js` carries
+no option values, profiles, or element order of its own: it
+fetches `schema.json` and builds its profile and option selects
+from that file, and its XML follows the schema's element order.
+The Pages workflow copies `schema/wsb-schema.json` into
+`site/` at deploy time instead of committing a copy, so a
+forgotten copy can never become a second source of truth.
+`tests/test_configurator.mjs` exists for the same reason the
+behaviour tests exist: it compares the page's output with the
+PowerShell generator's output for the same inputs, and it
+checks the rejection and escaping cases (relative host folder,
+bad option value, non-numeric memory, XML escaping) directly.
+
+Deliberately not built: importing an existing `.wsb` to tweak
+it (that adds a second XML parser to keep in parity with the
+validator), multiple mapped folders (the PowerShell generator
+supports one), and any server-side or upload step (the file is
+generated locally with a Blob download). The page states its
+own limits in plain text: it cannot launch, check edition or
+virtualization, enable the feature, or check a mapped folder
+on the target machine.
+
+Test results (v1.2.0, from a fresh extraction): Python 6/6,
+PowerShell behaviour 15/15, configurator 13/13 with pwsh on
+PATH (11/13 plus a stated SKIP without it), PSScriptAnalyzer 0,
+parser 0, site served locally over HTTP with all four files
+returning 200. Real-browser rendering was not verified here
+(no Chromium on this box) and remains a post-push Pages gate,
+as does the green CI run including the new Node step.

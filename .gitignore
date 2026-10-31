@@ -5,3 +5,8 @@ out/
 
 # Logs
 *.log
+
+# Generated at Pages deploy time (and for local site previews):
+# site/schema.json is a copy of schema/wsb-schema.json, never a
+# second source of truth to commit.
+site/schema.json

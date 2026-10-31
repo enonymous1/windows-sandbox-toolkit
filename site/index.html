@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Windows Sandbox configurator — windows-sandbox-toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<h1>Windows Sandbox configurator</h1>
+<p>
+  Pick a profile, tweak the settings, and download a real
+  <code>.wsb</code> file. Everything happens in your browser:
+  nothing you type is uploaded anywhere, and there is no server
+  behind this page.
+</p>
+<p>
+  <strong>This page does not run a sandbox.</strong> It only
+  generates the configuration file. To use the file you need
+  Windows 10/11 Pro, Enterprise, or Education (not Home), with
+  virtualization enabled and the Windows Sandbox feature turned
+  on. A generated file still needs a mapped host folder to
+  actually exist on the machine that launches it — this page
+  cannot check that for you.
+</p>
+<noscript><p class="error">This configurator needs JavaScript to generate the file.</p></noscript>
+<p id="schemaError" class="error" hidden></p>
+
+<form id="configurator" onsubmit="return false;">
+  <fieldset>
+    <legend>Profile</legend>
+    <div class="field">
+      <label for="profile">Start from</label>
+      <select id="profile"></select>
+      <p class="help">Changing the profile resets the options below to that profile's values. Untrusted is the locked-down default.</p>
+    </div>
+    <button type="button" id="resetProfile">Reset to profile values</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>Options</legend>
+    <div id="options"></div>
+    <div class="field">
+      <label for="memory">MemoryInMB</label>
+      <input id="memory" type="number" min="1" step="1" inputmode="numeric">
+      <p class="help">Below 2048 MB, Windows Sandbox raises it to 2048 automatically. This page does the same, with a warning.</p>
+    </div>
+    <div class="field">
+      <label for="logonCommand">Logon command (optional)</label>
+      <input id="logonCommand" type="text" placeholder="notepad.exe">
+      <p class="help">A single command that must exist <em>inside</em> the sandbox. For multi-step setup, map a script file in and run that instead.</p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Mapped folder (optional)</legend>
+    <div class="field">
+      <label for="hostFolder">Host folder</label>
+      <input id="hostFolder" type="text" placeholder="C:\Users\Public\Downloads\untrusted">
+      <p class="help">Must be an absolute Windows path. Env-var paths such as <code>%USERPROFILE%\Downloads\untrusted</code> work on Windows 11 23H2 and later.</p>
+    </div>
+    <div class="field">
+      <label for="sandboxFolder">Sandbox folder (optional)</label>
+      <input id="sandboxFolder" type="text" placeholder="Leave blank for the Desktop folder">
+      <p id="sandboxHint" class="help"></p>
+    </div>
+    <div class="field">
+      <label for="mappingAccess">Folder access</label>
+      <select id="mappingAccess">
+        <option value="default">Default for profile (read-only for Untrusted, writable otherwise)</option>
+        <option value="readonly">Read-only</option>
+        <option value="writable">Writable — changes persist on the host</option>
+      </select>
+      <p class="help">Never map a whole user profile or a folder with credentials into a sandbox running untrusted software, and never map one writable. Read-only, one folder, one job.</p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Export</legend>
+    <div class="field">
+      <label for="filename">File name</label>
+      <input id="filename" type="text" value="sandbox.wsb">
+    </div>
+    <button type="button" id="download">Download .wsb</button>
+    <button type="button" id="copy">Copy XML</button>
+    <p class="help">Then double-click the file on a Windows machine that meets the prerequisites above, or validate it there first with <code>scripts/Test-SandboxConfig.ps1</code>.</p>
+  </fieldset>
+</form>
+
+<ul id="warnings" aria-live="polite"></ul>
+<ul id="errors" aria-live="polite"></ul>
+
+<h2>Generated file</h2>
+<pre><code id="preview">Loading schema…</code></pre>
+
+<footer>
+  <p>
+    Part of <a href="https://github.com/enonymous1/windows-sandbox-toolkit">windows-sandbox-toolkit</a>.
+    The options, profiles, and memory floor come from
+    <code>schema/wsb-schema.json</code> in that repository — the same
+    file the PowerShell generator and validator read, so this page
+    cannot quietly disagree with them. See the repository's
+    <a href="https://github.com/enonymous1/windows-sandbox-toolkit/blob/main/docs/options.md">options documentation</a>
+    for what each setting does and what the format cannot do.
+  </p>
+</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

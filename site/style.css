@@ -1,0 +1,49 @@
+/* No framework, no external resources: one small stylesheet. */
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #fff;
+  margin: 0;
+  padding: 1rem;
+}
+main { max-width: 46rem; margin: 0 auto; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.2rem; margin-top: 2rem; }
+fieldset {
+  border: 1px solid #ccc;
+  border-radius: 0.4rem;
+  margin: 1rem 0;
+  padding: 1rem;
+}
+legend { font-weight: 700; padding: 0 0.4rem; }
+.field { margin: 0.75rem 0; }
+label { display: block; font-weight: 600; margin-bottom: 0.2rem; }
+input[type="text"], input[type="number"], select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem;
+  font: inherit;
+}
+.help { color: #444; font-size: 0.9rem; margin: 0.25rem 0 0; }
+.error { color: #8b0000; font-weight: 600; }
+#warnings { color: #6b4a00; }
+#errors { color: #8b0000; }
+button {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+pre {
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  border-radius: 0.4rem;
+  padding: 1rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+code { overflow-wrap: break-word; }
+footer { color: #444; font-size: 0.9rem; margin-top: 2rem; }

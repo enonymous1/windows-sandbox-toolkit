@@ -1,0 +1,45 @@
+name: Pages
+
+# The configurator in site/ is a static page: no build step, no
+# server, no dependencies. The one thing it needs from the
+# repository is schema/wsb-schema.json, copied into site/ as
+# schema.json at deploy time so the page reads the same single
+# source of truth as the PowerShell tools. That copy is generated
+# here, not committed, so the schema can never drift from the
+# page by a forgotten copy in the tree.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy schema into the site
+        run: cp schema/wsb-schema.json site/schema.json
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -7,6 +7,46 @@ not by this project).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-31
+
+### Added
+
+- Pages configurator (`site/`): a static, no-framework page
+  that generates a real `.wsb` file in the browser — profile
+  presets, all seven options, memory, logon command, one mapped
+  folder, live XML preview, Download and Copy. Nothing typed
+  is uploaded; there is no server behind it.
+- `.github/workflows/pages.yml`: deploys only `site/` to
+  GitHub Pages on push to `main`, after copying
+  `schema/wsb-schema.json` into `site/` as `schema.json` at
+  deploy time. That copy is generated, not committed
+  (`.gitignore`), so the schema stays the single source of
+  truth for the PowerShell tools and the page alike.
+- `tests/test_configurator.mjs`: checks the page's pure
+  generator against the schema and, when `pwsh` is on PATH,
+  against the PowerShell generator's output for the same
+  inputs (Untrusted defaults, DevTest overrides; Windows
+  mapping parity on Windows only). Wired into CI with
+  `setup-node`.
+
+### Changed
+
+- README: new Web configurator section, Deployment now
+  describes the Pages site (it previously said there was no
+  website), and Local Development documents the local site
+  preview (copy schema, serve over HTTP — browsers block
+  `fetch()` from `file://` pages).
+
+### Known limits (by design, stated on the page itself)
+
+- The page cannot launch a sandbox, check edition or
+  virtualization, enable the feature, or check that a mapped
+  host folder exists on the target machine. Those remain the
+  PowerShell validator's job on that machine.
+- Real-browser rendering of the page was not verified here
+  (no Chromium on this box); the Pages run after push is the
+  gate for that, along with the green CI run.
+
 ## [1.1.1] - 2026-10-31
 
 CI fix release. No profile behaviour changed and no shipped

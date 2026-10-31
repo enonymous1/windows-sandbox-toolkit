@@ -25,6 +25,11 @@ launches. It gives you:
 - A preflight script (`scripts/Enable-WindowsSandbox.ps1`) that
   checks your Windows edition, virtualization, and the Sandbox
   feature, and can turn the feature on.
+- A web configurator
+  (<https://enonymous1.github.io/windows-sandbox-toolkit/>)
+  that generates a `.wsb` file in your browser from the same
+  schema, with a live preview and a download button. Nothing you
+  type is uploaded; there is no server behind it.
 - One schema file (`schema/wsb-schema.json`) that the generator,
   validator, and tests all read, so the tools cannot quietly
   disagree with each other about what a valid configuration is.
@@ -107,6 +112,23 @@ on its own will fail with a clear error telling you why.
      directly after Quick start. It should be a ~30-second screen
      recording (not a mock) of step 3 end to end: generate, validate,
      launch, close, and the discard confirmation. See REVIEW.md. -->
+
+## Web configurator
+
+Try the settings without cloning anything:
+<https://enonymous1.github.io/windows-sandbox-toolkit/>
+
+Pick a profile, tweak the options, and download a `.wsb` file.
+The page reads `schema/wsb-schema.json` — the same file the
+PowerShell generator and validator read — so it cannot quietly
+disagree with them about what a valid configuration is, and
+`tests/test_configurator.mjs` checks its output against the
+PowerShell generator's output for the same inputs.
+
+What it cannot do, by design: launch a sandbox, check your
+Windows edition or virtualization, enable the feature, or check
+that a mapped host folder exists on the machine that will launch
+the file. Those are the PowerShell tools' jobs, on that machine.
 
 ## Profiles
 
@@ -209,6 +231,29 @@ Invoke-ScriptAnalyzer -Path '.\scripts'
 python3 tests/test_configs.py
 ```
 
+```bash
+# Configurator parity: the web page's output vs the PowerShell
+# generator's output for the same inputs. Needs Node 20+; the
+# PowerShell parity cases skip if pwsh is not on PATH.
+node tests/test_configurator.mjs
+```
+
+To preview the configurator locally, copy the schema into the
+site folder (the Pages workflow does this at deploy time) and
+serve it over HTTP — browsers block `fetch()` from
+`file://` pages, so opening `site/index.html` directly will
+fail to load the schema:
+
+```bash
+cp schema/wsb-schema.json site/schema.json
+python3 -m http.server --directory site
+# then open http://127.0.0.1:8000/
+```
+
+`site/schema.json` is generated, not committed: it is in
+`.gitignore` so a forgotten copy can never become a second
+source of truth.
+
 What cannot be tested on Linux/macOS, and must be checked on
 Windows: generating with a real mapped folder, launching a
 `.wsb`, running `Enable-WindowsSandbox.ps1`, and the CI run
@@ -223,8 +268,13 @@ instead of silently reverting an option to its default.
 ### Publishing this repository
 
 Push `main` normally; CI runs on every push and pull request.
-There is no website or package to deploy -- this repository
-ships scripts and configuration files, not a built artifact.
+There is no package to deploy, but there is a website: the
+configurator in `site/` deploys to GitHub Pages on every push
+to `main` (`.github/workflows/pages.yml`), at
+<https://enonymous1.github.io/windows-sandbox-toolkit/>.
+It deploys only `site/` plus a deploy-time copy of
+`schema/wsb-schema.json` as `site/schema.json`; nothing else
+in the repository is published as a page.
 
 ```powershell
 # From a fresh extraction, after creating the empty public repo:
@@ -240,8 +290,14 @@ gh repo edit enonymous1/windows-sandbox-toolkit --description 'Ready-to-use Wind
 gh repo view enonymous1/windows-sandbox-toolkit --json description,repositoryTopics
 ```
 
-Releases are tagged from `main` (`git tag v1.1.0`, then push the
+Releases are tagged from `main` (`git tag v1.2.0`, then push the
 tag) and described in [`CHANGELOG.md`](CHANGELOG.md).
+
+After the first push, enable Pages once in the repository
+Settings → Pages → Build and deployment → Source: GitHub
+Actions, then re-run the Pages workflow if it has already run.
+Also set the Pages URL as the repository homepage in Settings,
+so the configurator is one click from the repo page.
 
 ### Deploying a configuration to a machine
 
@@ -279,8 +335,11 @@ scripts/    New-SandboxConfig.ps1  — generator
             Enable-WindowsSandbox.ps1 — edition/feature/virtualization preflight
             SandboxSchema.psm1 — shared schema and path helpers
 docs/       options.md, profiles.md, assets/architecture.svg
+site/       index.html, style.css, app.js — Pages configurator
+            (schema.json is copied in at deploy time, not committed)
 tests/      test_configs.py — Python schema and profile tests
             Test-Generator.ps1 — PowerShell behaviour tests
+            test_configurator.mjs — JS output vs PowerShell generator
 ```
 
 ## Options reference
@@ -289,8 +348,8 @@ tests/      test_configs.py — Python schema and profile tests
 element, its allowed values, its default, and the things the
 format cannot do (window size, persistence, snapshots, and
 more than one logon command). [`REVIEW.md`](REVIEW.md) documents
-the staff review behind v1.1.0, including what was deliberately
-not changed and why.
+the staff review behind v1.1.0 and its later addenda, including
+what was deliberately not changed and why.
 
 ## Reference
 
