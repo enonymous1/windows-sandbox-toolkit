@@ -1,5 +1,10 @@
 name: CI
 
+# Windows-only CI is deliberate: the validator and generator tests
+# include Windows-path cases that cannot run on a Linux runner, and
+# the scripts' real users are on Windows. The Python schema tests
+# are cross-platform and also run locally on any OS.
+
 on:
   push:
     branches: [main]
@@ -19,14 +24,24 @@ jobs:
             .\scripts\Test-SandboxConfig.ps1 -Path $_.FullName
           }
 
-      - name: Validate shipped .wsb profiles with Python schema tests
+      - name: Generator and validator behaviour tests
+        shell: pwsh
+        run: pwsh tests/Test-Generator.ps1
+
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python tests/test_configs.py
 
-      - name: PSScriptAnalyzer (errors only)
+      - name: Validate shipped .wsb profiles with Python schema tests
+        run: python tests/test_configs.py
+
+      - name: PSScriptAnalyzer (any finding fails)
         shell: pwsh
         run: |
           Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
-          Invoke-ScriptAnalyzer -Path '.\scripts' -Severity Error
+          $findings = Invoke-ScriptAnalyzer -Path '.\scripts'
+          if ($findings) {
+            $findings | Format-Table -AutoSize
+            throw "PSScriptAnalyzer reported $($findings.Count) finding(s)."
+          }
