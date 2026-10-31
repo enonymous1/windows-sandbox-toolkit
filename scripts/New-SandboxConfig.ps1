@@ -372,12 +372,45 @@ if ($HostFolder) {
 if (-not $SkipValidation) {
     $validator = Join-Path -Path $PSScriptRoot -ChildPath 'Test-SandboxConfig.ps1'
     if (Test-Path -LiteralPath $validator -PathType Leaf) {
-        # Captured, not piped: piping to Out-Null would make
-        # $LASTEXITCODE describe the pipeline, not the validator.
-        $validationOutput = & $validator -Path $OutputPath
-        if ($LASTEXITCODE -ne 0) {
-            $validationOutput | ForEach-Object { Write-Output $_ }
-            throw "Generated file failed validation: $OutputPath. See the validator output above."
+        # The validator MUST run as a subprocess, not in-process.
+        # Two PowerShell traps made the in-process call wrong in
+        # both directions (CI failure, 2026-10-31):
+        #  - A PowerShell script never sets $LASTEXITCODE, so
+        #    checking it after an in-process call reads whatever
+        #    the previous native command left behind. In CI the
+        #    XXE validator case (correctly exiting 1) ran just
+        #    before the Windows mapping case, so a perfectly
+        #    valid mapped.wsb was reported as failed.
+        #  - On a real failure the validator calls exit 1, which
+        #    terminates the whole process when run in-process,
+        #    so the throw below was unreachable for real failures.
+        # A native subprocess sets $LASTEXITCODE for real, and
+        # its exit does not kill this process, so both cases
+        # are now reported correctly. 2>&1 is merged so a real
+        # failure's error lines are printed, not swallowed.
+        $engine = $null
+        # Do not read .Source straight off Get-Command: under
+        # Set-StrictMode that throws when the command is not
+        # found (pwsh is not on PATH on every machine that runs
+        # this script, including the Linux box that built it).
+        foreach ($engineName in @('pwsh', 'powershell')) {
+            $command = Get-Command -Name $engineName -ErrorAction SilentlyContinue
+            if ($command -and $command.Source -and (Test-Path -LiteralPath $command.Source -PathType Leaf)) { $engine = $command.Source; break }
+        }
+        if (-not $engine) {
+            foreach ($name in @('pwsh', 'pwsh.exe', 'powershell.exe')) {
+                $candidate = Join-Path -Path $PSHOME -ChildPath $name
+                if (Test-Path -LiteralPath $candidate -PathType Leaf) { $engine = $candidate; break }
+            }
+        }
+        if (-not $engine) {
+            Write-Warning "No PowerShell engine found on PATH or in `$PSHOME; the generated file was not self-validated."
+        } else {
+            $validationOutput = & $engine -NoProfile -File $validator -Path $OutputPath 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                $validationOutput | ForEach-Object { Write-Output $_ }
+                throw "Generated file failed validation: $OutputPath. See the validator output above."
+            }
         }
     } else {
         Write-Warning "Validator not found next to the generator ($validator); the generated file was not self-validated."

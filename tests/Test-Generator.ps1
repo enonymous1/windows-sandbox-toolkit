@@ -131,7 +131,21 @@ Set-Content -LiteralPath $xxe -Value ('<?xml version="1.0"?><!DOCTYPE Configurat
 $result = Invoke-Validator -Path $xxe
 Assert-Test -Name 'Validator rejects XXE DOCTYPE without leaking' -Condition ($result.ExitCode -eq 1 -and $result.Output -notmatch 'XXE-SENTINEL')
 
-# 8. Folder mapping: Windows only, with a real temp folder.
+# 8. Self-validation must survive a stale $LASTEXITCODE (CI
+#    regression, 2026-10-31). The XXE case above ran the validator
+#    as a subprocess that correctly exited 1, leaving
+#    $LASTEXITCODE = 1 in this process. A generator run without
+#    -SkipValidation must still succeed: the old generator read
+#    that stale code and threw on a valid file, which is how the
+#    Windows mapping case failed in CI. This case needs no folder,
+#    so it runs on every platform -- unlike the mapping case, which
+#    is why Linux CI never caught it.
+$stale = Join-Path -Path $testRoot -ChildPath 'stale.wsb'
+$staleFailed = $false
+try { & (Join-Path -Path $repoRoot -ChildPath 'scripts/New-SandboxConfig.ps1') -Profile Untrusted -OutputPath $stale | Out-Null } catch { $staleFailed = $true }
+Assert-Test -Name 'Self-validation survives stale LASTEXITCODE' -Condition (-not $staleFailed -and (Test-Path -LiteralPath $stale))
+
+# 9. Folder mapping: Windows only, with a real temp folder.
 if ($IsWindows) {
     $hostFolder = Join-Path -Path $testRoot -ChildPath 'host'
     [void](New-Item -Path $hostFolder -ItemType Directory -Force)

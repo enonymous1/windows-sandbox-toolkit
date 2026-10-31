@@ -7,6 +7,42 @@ not by this project).
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-31
+
+CI fix release. No profile behaviour changed and no shipped
+`.wsb` file changed.
+
+### Fixed
+
+- Generator self-validation no longer reads `$LASTEXITCODE`
+  after an in-process validator call. A PowerShell script
+  never sets `$LASTEXITCODE`, so the old check read whatever
+  the previous native command left behind: in CI the XXE
+  validator case (correctly exiting 1) ran just before the
+  Windows mapping case, so a valid `mapped.wsb` was reported
+  as failed. On a real failure the validator's `exit 1` also
+  terminated the whole process in-process, so the old throw
+  was unreachable for real failures. The generator now runs
+  the validator as a subprocess (`pwsh`/`powershell` from
+  PATH, falling back to `$PSHOME`), where `$LASTEXITCODE` is
+  real and an exit does not kill the generator, and merges
+  the validator's error stream so a real failure's output is
+  printed instead of swallowed. The validator's header now
+  documents this subprocess requirement for future callers.
+- The engine lookup in the new subprocess code is null-safe
+  under `Set-StrictMode`: reading `.Source` straight off a
+  missing `Get-Command` result throws, which was caught by
+  the local repro before it reached CI.
+
+### Added
+
+- `tests/Test-Generator.ps1`: "Self-validation survives
+  stale LASTEXITCODE" regression case, reproducing the exact
+  CI sequence (a failing validator subprocess, then a
+  self-validating generator run) without needing a folder,
+  so it runs on Linux CI too -- the Windows-only mapping
+  case was why Linux runs never caught this.
+
 ## [1.1.0] - 2026-10-31
 
 Staff review release. No profile behaviour changed: every shipped

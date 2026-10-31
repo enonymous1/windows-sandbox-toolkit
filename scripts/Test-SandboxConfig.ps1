@@ -24,6 +24,12 @@
     command-line script, not a module: exit is intentional here, so
     CI and callers can rely on the exit code. Do not dot-source it
     into an interactive session and expect to keep that session.
+    Run it as a subprocess (pwsh -NoProfile -File ...) if you need
+    its exit code: calling it in-process both terminates the caller
+    on failure (exit 1) and never sets $LASTEXITCODE on success,
+    so an in-process caller reads a stale code from an earlier
+    native command. The generator runs it as a subprocess for
+    exactly this reason.
 
 .PARAMETER Path
     The .wsb file to validate.

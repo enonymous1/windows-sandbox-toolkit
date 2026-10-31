@@ -321,3 +321,40 @@ nothing).
   captured on Windows. The README references only the shipped
   SVG by image link; the other three are HTML comments at
   their insertion points, not broken image links.
+
+## Addendum — v1.1.1: the first CI run found a bug (2026-10-31)
+
+CI (windows-latest) ran for the first time and failed at
+exactly one place: the Windows-only mapping case, with
+`Generated file failed validation: ...\mapped.wsb` and no
+validator error above it. The mapped file was not invalid,
+and the validator was not wrong.
+
+Root cause, reproduced locally before fixing: the generator
+called the validator in-process and checked `$LASTEXITCODE`.
+A PowerShell script never sets `$LASTEXITCODE`, so the check
+read the code left by the previous native command -- the XXE
+validator subprocess, which correctly exits 1, running just
+before the mapping case. On Linux the bug was invisible,
+because the mapping cases SKIP there and every earlier
+generator case uses `-SkipValidation`. The old comment
+("piping would make $LASTEXITCODE describe the pipeline")
+was wrong in the other direction too: a real validator
+failure calls `exit 1`, which kills the calling process
+in-process, so the generator's throw could never fire for a
+real failure.
+
+Fix (v1.1.1, no profile or shipped-file change): the
+generator runs the validator as a subprocess, where
+`$LASTEXITCODE` is real and an exit does not kill the
+generator, merges its error stream so real failures are
+printed, and looks up the engine null-safely under
+`Set-StrictMode`. A regression test reproduces the CI
+sequence without a folder, so it runs on Linux too.
+
+Test results (v1.1.1, from a fresh extraction): Python 6/6,
+PowerShell behaviour 15/15 (14 old + 1 new regression case,
+folder cases still SKIP on Linux), PSScriptAnalyzer 0,
+parser 0. The Windows mapping case itself remains a CI-only
+gate and needs a green run after this fix; the mechanism
+that failed it is now covered on every platform.
